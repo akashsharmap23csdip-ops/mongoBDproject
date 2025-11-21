@@ -1,0 +1,21 @@
+.
+├── LICENSE
+├── PIPELINE_DOCS.md
+├── QUICKSTART.md
+├── README.md
+├── aggregation_pipelines.py
+├── amazon Food Reviews 100k Dataset.csv
+├── amazon Food Reviews 100k Dataset.csv.zip
+├── app.py
+├── db_utils.py
+├── information
+├── ingest_data.py
+├── project_structure.txt
+├── requirements.txt
+├── run.sh
+├── setup.bat
+├── setup.sh
+└── templates
+    └── dashboard.html
+
+2 directories, 17 files

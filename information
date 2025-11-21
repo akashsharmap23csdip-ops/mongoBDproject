@@ -1,7 +1,65 @@
-Real-Time Social Media/News Feed Analyzer is very modern and emphasizes both text processing and advanced MongoDB aggregation techniques like $addFields and $bucket.Here is a focused plan detailing the technologies, data model, and specific analysis steps for your group.📰 Project Plan: Social Media Feed Analyzer1. 🛠️ Technology Stack (Recommended)ComponentTechnologyRationaleBackend/Data ProcessingPythonPython has the best libraries for text analysis (like NLTK or TextBlob for sentiment) and connecting to MongoDB (PyMongo).Web FrameworkFlask or DjangoSimple frameworks to host your application logic and serve the visualization page.DatabaseMongoDBThe core data store, leveraging its flexible schema for unstructured text data.VisualizationChart.js or D3.jsJavaScript libraries for creating interactive charts from the aggregated JSON data.2. 🗄️ Data Model & IngestionSince you are simulating a "real-time" feed, you'll work with a static dataset containing several hundred thousand to a few million documents.Data Source: Use an available dataset of social media posts (e.g., archived Twitter/X data, Reddit submissions, or news headlines) that includes a timestamp, text, and some measure of engagement (likes, comments, upvotes).Collection Schema:FieldTypeDescription_idObjectIdMongoDB's primary key.timestampDateThe time the post was made. Crucial for trend analysis.contentStringThe main text of the post/article.author_idStringIdentifier for the user/author.engagement_scoreIntegerTotal reactions (likes + shares + comments).tagsArray of StringsHashtags or categorized topics.Ingestion Step: Write a Python script using PyMongo to read your raw data (e.g., CSV or JSON file) and insert it into a MongoDB collection.3. 🧠 Core Data Processing & AnalysisThis is the most critical part, where you use MongoDB's Aggregation Pipeline to analyze the "big data." You will perform the following analysis steps in your application code before displaying them.A. Sentiment Trend Analysis (Temporal Grouping)Goal: Calculate the average sentiment of all posts for each day of the week or hour of the day to identify patterns.Preprocessing: First, your Python script must calculate and store a sentiment score (a numerical value, e.g., $-1$ to $+1$) for each post using a library like TextBlob. Store this in a new field called sentiment_score.MongoDB Pipeline:$project: Extract the day-of-week/hour from the timestamp.$group: Group the documents by the extracted day/hour.$avg: Calculate the average of the sentiment_score for each group.$sort: Order the results.$$\begin{aligned}
-[
-&\text{\$project}: \{ \_id: 0, \text{dayOfWeek}: \{ \text{\$dayOfWeek}: \text{\$timestamp} \}, \text{score}: \text{\$sentiment\_score} \}, \\
-&\text{\$group}: \{ \_id: \text{\$dayOfWeek}, \text{avgSentiment}: \{ \text{\$avg}: \text{\$score} \} \}, \\
-&\text{\$sort}: \{ \text{\_id}: 1 \}
-]
-\end{aligned}$$B. Content Length vs. Engagement (Data Bucketing)Goal: Determine if longer or shorter posts receive more engagement.Preprocessing: Use the Python script to calculate the length of the content string and store it as a new field, content_length.MongoDB Pipeline:$bucket: Group the posts into custom "buckets" based on content_length (e.g., Short: 0-100 chars, Medium: 101-200 chars, Long: $>200$ chars).$group: Calculate the average engagement_score for each bucket.Visualization: Display this as a bar chart comparing the average engagement across the three length categories.C. Top Tag/Topic Identification (Array Unwinding)Goal: Find the most frequently discussed topics and their median engagement.MongoDB Pipeline:$unwind: Deconstruct the tags array field, creating a separate document for each tag.$group: Group by the tag (_id: "$tags").$sum: Count the total occurrences of each tag (total_posts).$avg: Calculate the average engagement_score for that tag.$sort: Sort the results by total_posts in descending order.$limit: Return the top 10 tags.✅ Deliverables SummarySentiment Calculation: Successfully add a calculated sentiment_score to every document.Web Interface: A basic page displaying the results of the three analyses.Visualization: Charts for:Sentiment over time (Line Chart).Engagement by content length category (Bar Chart).Top 10 most frequent tags (Bar Chart or Word Cloud).
+Phase 1: Preparation (Set the Stage)
+Install: Install and set up your MongoDB Server.
+
+Environment: Create a Python virtual environment and install necessary libraries: pymongo, pandas, textblob, and flask.
+
+Phase 2: Data Ingestion & Preprocessing (The Big Data Store)
+Write Script: Create a Python script to read the amazon Food Reviews 100k Dataset.csv file.
+
+Calculate: For every review, use textblob to calculate the sentiment_score and Python's len() to calculate content_length.
+
+Load: Use collection.insert_many() in pymongo to insert all 100,000 processed documents into your MongoDB database.
+
+Phase 3: MongoDB Aggregation (The Core Analysis)
+Develop Pipelines: Write the three complex Aggregation Pipelines using the MongoDB query language. These pipelines will process the 100,000 documents to produce summarized, small JSON results.
+
+Pipeline 1: Sentiment by Rating (Grouping → Average Sentiment).
+
+Pipeline 2: Content Length vs. Rating (Bucketing by Length → Average Rating).
+
+Pipeline 3: Rating Distribution by Sentiment (Bucketing by Sentiment → Count Distribution).
+
+Phase 4: Application Backend (The Bridge)
+Flask App: Set up a basic Flask web application.
+
+API Endpoints: Define three API routes (e.g., /api/sentiment_by_rating).
+
+Execute: Have each route execute one of the Aggregation Pipelines from Phase 3 and return the resulting summarized data as a JSON response.
+
+Phase 5: Visualization (Analyzing the Results)
+Dashboard: Create a single HTML page (your website dashboard).
+
+Fetch Data: Use JavaScript to call the three API endpoints you created in Flask.
+
+Render Charts: Use Chart.js (or similar library) to display the analysis results visually.
+
+🎨 How the Website Dashboard Should Look
+Your final website should be a simple Analytics Dashboard that clearly presents the results of your three MongoDB analyses.
+
+The key to meeting the "analyzing the results" requirement is to have a clean, informative layout, typically with three main sections:
+
+1. Header and Data Summary
+Title: "Amazon Food Review Analysis Dashboard"
+
+Metrics: A small box showing the total number of reviews analyzed (100,000), proving you handled the "big data."
+
+2. Chart 1: Sentiment by Engagement (Bar Chart)
+Title: Average Sentiment Score by Star Rating
+
+Visualization: A Bar Chart with 5 bars (for 1, 2, 3, 4, and 5 stars).
+
+Insight: Visually shows whether a 5-star review always has the highest average positive sentiment score (closest to +1.0) and a 1-star review is always closest to -1.0.
+
+3. Chart 2: Content Length vs. Engagement (Bar Chart)
+Title: Average Rating by Review Length Category
+
+Visualization: A Bar Chart with three bars: "Short," "Medium," and "Long" (based on your $bucket definitions).
+
+Insight: Shows whether reviewers tend to write longer reviews when they are very happy or very angry, or if they write the shortest reviews for average ratings.
+
+4. Chart 3: Rating Distribution by Sentiment (Stacked Bar Chart)
+Title: Star Rating Distribution Within Sentiment Groups
+
+Visualization: A Stacked Bar Chart where the main bars are "Negative," "Neutral," and "Positive." Each bar is segmented to show the breakdown of 1-star, 2-star, etc., ratings within that sentiment group.
+
+Insight: Demonstrates, for example, what percentage of "Positive" reviews were actually 4-stars versus 5-stars, revealing nuances in the data.
